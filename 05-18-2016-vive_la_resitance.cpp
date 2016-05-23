@@ -78,6 +78,12 @@ Total = 1/(1/30 + 1/22.5) = 12.57
 #include <iomanip>
 using namespace std;
 
+class Series(char [] link, int level)
+{
+public:
+	char [] link;
+	int level;
+}
 
 int main()
 {	
@@ -112,14 +118,40 @@ double createArray(char [] resistors, int count, char [][2] connectedResistors, 
 	}
 }
 
-void fixArray(char [][2]connectedResistors, char []resistors)
+
+void findSeries(char [][2]resistors, int [] levels)
 {
-	for(int i = 0; i < connectedResistors.size(); i++)
+	Series [100] series;
+	seriesCount = 0;
+	for(int i = 0; i < resistors.size(); i++)
 	{
-		for(in)
+		char currentEnd = resistors[i][1];
+		for(int j = 0; j < resistor.size(); j++)
+		{
+			char currentBeginning = resistors[j][0];
+			for(int check = 0; check < series.size(); check++)
+			{
+				if(currentEnd == series[check][2] && currentBeginning == series[check+1][2] && check < 100)
+				{
+					break;
+				}
+				else if (currentEnd == series[check-1][2] && currentBeginning == series[check][2] && check > 0)
+				{
+					break;
+				}
+			}
+			if(currentEnd == currentBeginning && linkCount == 1)
+			{
+				series[seriesCount].link[0] = resistors[i][0];
+				series[seriesCount].link[1] = resistors[i][1];
+				series[seriesCount].link[2] = resistors[j][1];
+				
+				series[seriesCount].level += (levels[i] + levels[j]);
+			}	
+		}
 	}
 }
-}
+
 
 double calculate(char[][]array)
 {
