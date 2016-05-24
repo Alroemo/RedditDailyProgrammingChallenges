@@ -63,7 +63,7 @@ a---5---c----10---e---+
 |                 |
 +---5---d---10----+
 
-Series found: ACE and ABF, linked by EF, ACE matching end e limited due to ADE making ACE and ADE parallel
+Series found: ACE, ABF, ADE, CEF, linked by EF, ACE matching end e limited due to ADE making ACE and ADE parallel
 ACE = 15, ADE = 15
 A-E = 1/(1/15 + 1/15) = 7.5
 A-f = 7.5 + 15 = 22.5
@@ -78,22 +78,52 @@ Total = 1/(1/30 + 1/22.5) = 12.57
 #include <iomanip>
 using namespace std;
 
-class Series(char [] link, int level)
+
+void createArray(char [] resistors, int count, char [][2] connectedResistors, double [] levels);
+void findSeries(Series [100] series, int seriesCount, char [][2]resistors, double [] levels);
+void fixErrorSeries(Series [100] series, int seriesCount, char [][2]resistors, double [] levels);
+void identifyParallel(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount);
+void calculateLinkedResistance(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount);
+double calculateTotalResistance(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount);
+
+class Series
 {
 public:
 	char [] link;
-	int level;
+	double level;
+	string type;
+	Series linked;
+	bool done;
+}
+
+class Parallel
+{
+public:
+	Series [] link;
+	double level;
 }
 
 int main()
 {	
+	double totalResistance;
 	char [] resistors;
 	int resistorCount;
 	char [][2]connectedResistors;
 	int [] levels;
+	Series [100] series;
+	int seriesCount;
+	Parallel [100] parallels;
+	int parallelCount;
 	createArray(resistors, resistorCount, connectedResistors, levels);
+	findSeries(series, seriesCount, resistors, levels);
+	identifyParallel(series, seriesCount, parallels, parallelCount);
+	totalResistance = calculateTotalResistance(series, seriesCount, parallels, parallelCount);
+	
+	cout<< "Total Resistance: ", totalResitance<<endl; 
+	
 }
-double createArray(char [] resistors, int count, char [][2] connectedResistors, int [] levels)
+
+void createArray(char [] resistors, int count, char [][2] connectedResistors, double [] levels)
 {
 	fstream filein;
 	filein.open("file.dat");
@@ -118,10 +148,8 @@ double createArray(char [] resistors, int count, char [][2] connectedResistors, 
 	}
 }
 
-
-void findSeries(char [][2]resistors, int [] levels)
+void findSeries(Series [100] series, int seriesCount, char [][2]resistors, double [] levels)
 {
-	Series [100] series;
 	seriesCount = 0;
 	for(int i = 0; i < resistors.size(); i++)
 	{
@@ -129,17 +157,7 @@ void findSeries(char [][2]resistors, int [] levels)
 		for(int j = 0; j < resistor.size(); j++)
 		{
 			char currentBeginning = resistors[j][0];
-			for(int check = 0; check < series.size(); check++)
-			{
-				if(currentEnd == series[check][2] && currentBeginning == series[check+1][2] && check < 100)
-				{
-					break;
-				}
-				else if (currentEnd == series[check-1][2] && currentBeginning == series[check][2] && check > 0)
-				{
-					break;
-				}
-			}
+		
 			if(currentEnd == currentBeginning && linkCount == 1)
 			{
 				series[seriesCount].link[0] = resistors[i][0];
@@ -147,39 +165,116 @@ void findSeries(char [][2]resistors, int [] levels)
 				series[seriesCount].link[2] = resistors[j][1];
 				
 				series[seriesCount].level += (levels[i] + levels[j]);
+				series[seriesCount].type = "series";
+				series[seriesCount].linked = NULL;
+				series[seriesCount].done = false;
+				seriesCount++;
+				
 			}	
+		}
+	}
+	fixErrorSeries(series, seriesCount, resistors, levels);
+}
+
+//looks for possible series where the series is directly connected to another series and removes that part
+void fixErrorSeries(Series [100] series, int seriesCount, char [][2]resistors, double [] levels)
+{
+	for (int i = 0; i < seriesCount; i++)
+	{
+		Series currentSeriesCheck = series[i];
+		for(int j = 0; j < seriesCount; j++)
+		
+		{	
+			if(currentSeriesCheck.link[0] == series[j].link[1] && currentSeriesCheck.link[1] == series[j].link[2])
+			{
+				series[i].linked = series[j];
+				for(int k = 0; k < resistors.size(); k++)
+				{
+					if(currentSeriesCheck.link[0] == resistors[k][0] && currentSeriesCheck.link[1] == resistors[k][1])
+					{
+						series[i].level -= levels[k];
+					}
+				}
+			}
+		}
+	}
+}
+void identifyParallel(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount)
+{
+	parallelCount = 0;
+	for (int i = 0; i < seriesCount; i++)
+	{
+		Series currentSeries = series[i];
+		//checks to see if the curcuit was already declared a parallel and breaks if so
+		if(currentSeries.type == "parallel")
+			break;
+		else
+		{
+			for(int j = 0; j < seriesCount; j++)
+			{	
+				//breaks if checking the same series
+				if(currentSeries.link[0] == series[j].link[0] && currentSeries.link[1] == series[j].link[1] && currentSeries.link[2] == series[j].link[2])
+					break;
+				else
+				{
+					if(currentSeries.link[0]== series[j].link[0] && currentSeries.link[2]== series[j].link[2])
+					{
+						series[i].type = "parallel";
+						series[j].type = "parallel"
+						parallels[parallelCount].link[0] = series[i].link;
+						parallels[parallelCount].link[1] = series[j].link;
+						parallels[parallelCount].level = 1/((1/series[i].level)+(1/series[j].level));
+						parallelCount++;
+					}
+				}
+			}
 		}
 	}
 }
 
-
-double calculate(char[][]array)
+void calculateLinkedResistance(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount)
 {
-	double resistanceLevel = 0;
-	//get first row to see the number of resistors in the curcuit
-	int curcuitCount;
-	
-	curcuitCount = array[0].size();	
-	int numberInParallel[curcuitCount];
-	int totalResist[curcuitCount];
-		
-	//starts on the second row since the first does not have the resistance levels
-	for(int row = 1; row < array.size(); row++)
+	for(int i = 0; i < seriesCount; i++)
 	{
-		for(int i = 0; col < curcuitCount;i++)
+		if(series[i].linked != NULL)
 		{
-			if(array[row][0]==array[0][i])
+			for(int j = 0; j < parallelCount; j++)
 			{
-				numberInParallel[i]++;
-				totalResist[i]+= array[row][2];
+				if(series[i].linked == parallels[j].link[0] || series[i].linked == parallels[j].link[1])
+				{
+					parallels[j].level += series[i].level;
+					series[i].done = true;
+				}
 			}
-			if(array[row][1]==array[0][i])
-			{
-				
-			}			
 		}
-		
-	}	
-	
-	return resistanceLevel;;
+	}
 }
+
+double calculateTotalResistance(Series [100] series, int seriesCount, Parallel [100]parallels, int parallelCount)
+{
+	calculateLinkedResistance(series, seriesCount, parallels, parallelCount);
+	double totalResistance = 0;
+	double subResistance = 0;
+	double [] levels;
+
+	for(int i = 0; i < seriesCount; i++)
+	{
+		if(series[i].done == false)
+			levels[i] = series[i].level;
+	}
+	for(int j = 0; j < parallelCount; j++)
+	{
+		levels[seriesCount + j] = parallels[j];	
+	}
+	
+	for(int count = 0; count < (seriesCount+parallelCount); count++)
+	{
+		totalResistance += 1/levels[count];
+	}
+	
+	totalResistance = 1/totalResistance;
+	
+	return totalResistance;
+
+}
+
