@@ -23,6 +23,7 @@ Node 3 has a degree of 1
 */
 
 #include <iostream>
+#include <fstream>
 using namespace std;
 void readArray(int totalCount, int [][2]inputArray, int entityCount);
 void printNodes(int totalCount, int [][2]inputArray, int entityCount);
