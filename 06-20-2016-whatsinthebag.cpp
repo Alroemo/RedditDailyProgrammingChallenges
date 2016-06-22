@@ -37,9 +37,34 @@ If more tiles have been removed from the bag than possible, such as 3 Qs, you sh
 Invalid input. More Q's have been taken from the bag than possible.
 ----------------------------------------------------------------------------------------------------------------------------------------------
 */
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+using namespace std;
 
+char [] letters = {'a', 'b', 'c', 'd','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s,'t','u','v','w','x','y','z'};
+int [] count = 
 int main()
 {
-
+  
   return 0;
+}
+
+void getScrabbleList(char [] list, int count)
+{
+  count = 0;
+  fstream filein;
+	filein.open("file.dat");
+	
+	if(!filein.fail())
+	{	
+		while(!fin.eof())
+		{
+		  filein>>list[count];
+		  count++;
+		}
+	}
+	
+	
+	
 }
