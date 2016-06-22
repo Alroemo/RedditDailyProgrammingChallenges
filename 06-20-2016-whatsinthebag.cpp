@@ -37,3 +37,9 @@ If more tiles have been removed from the bag than possible, such as 3 Qs, you sh
 Invalid input. More Q's have been taken from the bag than possible.
 ----------------------------------------------------------------------------------------------------------------------------------------------
 */
+
+int main()
+{
+
+  return 0;
+}
